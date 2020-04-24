@@ -20,7 +20,8 @@ public class ClientToClientResponder extends  Thread{
         try{
             while(true) {
                 //process the messages from client
-                //All the client helper functions will be used here
+                String msg = ois.readUTF();
+                ClientHelper.processMessage(client, msg);
             }
         }
         catch (Exception e) {
