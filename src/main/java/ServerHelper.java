@@ -39,11 +39,9 @@ public class ServerHelper {
 
     /***
      * Generic method to receive and parse message from both peer as well as server
-     * @param ois
      * @throws IOException
      */
-    public static void processMessage(ObjectInputStream ois) throws IOException {
-        String message = ois.readUTF();
+    public static void processMessage(SocketConnection client, String message) throws IOException {
         String [] msgs = message.split(":");
         switch (msgs[0]) {
             case "UpdateList":
