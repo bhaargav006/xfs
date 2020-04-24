@@ -12,22 +12,22 @@ public class ClientThread extends Thread {
         this.port = port;
     }
 
-    ServerSocket serverSocket;
+    ServerSocket clientSocket;
 
     @Override
     public void run() {
         try {
-            serverSocket = new ServerSocket(port);
+            clientSocket = new ServerSocket(port);
             while (true) {
-                Socket client = null;
+                Socket peers = null;
                 try {
-                    client = serverSocket.accept();
-                    SocketConnection sc = new SocketConnection(client);
+                    peers = clientSocket.accept();
+                    SocketConnection sc = new SocketConnection(peers);
                     Thread clientResponder = new ClientToClientResponder(sc);
                     clientResponder.start();
                 } catch (IOException e) {
-                    client.close();
-                    System.out.println("Error in the server sockets while accepting peers");
+                    peers.close();
+                    System.out.println("Error in accepting request from other peers.");
                 }
             }
         } catch (IOException e) {
