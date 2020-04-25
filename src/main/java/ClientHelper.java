@@ -13,9 +13,8 @@ public class ClientHelper {
 
     /***
      * Generic method to send message to any remote machine (server or client)
-     * @param oos
-     * @param message
-     * @throws IOException
+     * @param oos = output stream to the target
+     * @param message = message object that has to be sent
      */
     public static void sendMessage(ObjectOutputStream oos, Object message) {
         try {
@@ -28,9 +27,8 @@ public class ClientHelper {
 
     /***
      * Generic method to receive and parse message from both peer as well as server
-     * @throws IOException
      */
-    public static void processMessage(SocketConnection sc, String message) throws IOException {
+    public static void processMessage(SocketConnection sc, String message) {
         String [] msgs = message.split(":");
         switch (msgs[0]) {
             case "Download":
@@ -50,8 +48,8 @@ public class ClientHelper {
      * Gets a list of files present in the directory of the client
      *
      * /8001 is the directory of client 8001
-     * @param port
-     * @return
+     * @param port = is the name of the directory belonging to the current peer
+     * @return list of files
      */
     public static List<String> getListOfFiles(int port){
         List<String> listOfFiles = new ArrayList<>();
@@ -70,7 +68,26 @@ public class ClientHelper {
      */
     public static void sendFileSystemContent(ObjectOutputStream oos, int port, List<String> listOfFiles){
         ClientHelper.sendMessage(oos,"UpdateList");
-        ClientHelper.sendMessage(oos,String.valueOf(8001));
+        ClientHelper.sendMessage(oos,port);
         ClientHelper.sendMessage(oos,listOfFiles);
     }
+
+    public static List<Integer> sendFindRequest(SocketConnection tracker, String fName) {
+        ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
+        ObjectInputStream ois = tracker.getOis();
+        try {
+            String msg = (String) ois.readObject();
+            if(msg.equalsIgnoreCase("null")) {
+                System.out.println("File does not exist. ");
+                return null;
+            }
+            System.out.println("Size of peerList: " + msg);
+            List<Integer> peerList = (ArrayList<Integer>) ois.readObject();
+            return peerList;
+        } catch (IOException| ClassNotFoundException e) {
+            System.out.println("Error: Couldn't get peerList form the tracking server");
+        }
+        return null;
+    }
+
 }

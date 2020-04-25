@@ -10,12 +10,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TrackingServer {
 
     // this map contains a set of ports (peers) that store a file
-    static volatile ConcurrentHashMap<String, Set<Integer>> listOfFiles;
+    static volatile ConcurrentHashMap<String, Set<Integer>> listOfFileOwners;
     ServerSocket serverSocket;
 
     // the server listens to requests from clients and handles them using ServerToClientResponder
     public TrackingServer(int port) {
-        listOfFiles = new ConcurrentHashMap<String, Set<Integer>>();
+        listOfFileOwners = new ConcurrentHashMap<String, Set<Integer>>();
         try {
             serverSocket = new ServerSocket(port);
             while(true) {

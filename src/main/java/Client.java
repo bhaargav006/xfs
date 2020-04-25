@@ -36,7 +36,7 @@ public class Client {
                     case 'F':
                         System.out.println("Enter filename:");
                         String fname = in.nextLine();
-
+                        ClientHelper.sendFindRequest(trackingServerSocket,fname);
                         break;
                     case 'D':
                         break;
