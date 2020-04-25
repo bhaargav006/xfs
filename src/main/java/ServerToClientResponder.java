@@ -12,9 +12,9 @@ public class ServerToClientResponder extends Thread {
     public void run() {
         try{
             while(true) {
-                //process the messages from client
+
                 ObjectInputStream ois = client.getOis();
-                String msg = ois.readUTF();
+                String msg = (String) ois.readObject();
                 ServerHelper.processMessage(client, msg);
             }
         }
