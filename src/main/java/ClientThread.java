@@ -23,7 +23,7 @@ public class ClientThread extends Thread {
                 try {
                     peers = clientSocket.accept();
                     SocketConnection sc = new SocketConnection(peers);
-                    Thread clientResponder = new ClientToClientResponder(sc);
+                    Thread clientResponder = new ClientToClientResponder(sc, port);
                     clientResponder.start();
                 } catch (IOException e) {
                     peers.close();

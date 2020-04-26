@@ -118,11 +118,15 @@ public class ServerHelper {
             SocketConnection sc = null;
             try {
                 sc = new SocketConnection(peer);
-                sendMessage(sc.getOos(),msg);
-                receiveFileList(sc.getOis());
+                sendMessage(sc.getOos(), msg);
+                if (sc.getOis().readObject().equals("UpdateList")) {
+                    receiveFileList(sc.getOis());
+                }
                 sc.close();
             } catch (IOException e) {
                 System.out.println("Peer" + peer + "is Not Available!");
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         System.out.println("Successfully Created the listOfFileOwners...");
