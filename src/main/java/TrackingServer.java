@@ -16,6 +16,7 @@ public class TrackingServer {
     // the server listens to requests from clients and handles them using ServerToClientResponder
     public TrackingServer(int port) {
         listOfFileOwners = new ConcurrentHashMap<String, Set<Integer>>();
+        ServerHelper.createListOfFileOwners(listOfFileOwners);
         try {
             serverSocket = new ServerSocket(port);
             while(true) {
