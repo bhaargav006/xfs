@@ -2,7 +2,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -35,6 +37,14 @@ public class ClientHelper {
                 //Download a file and send to the requester
                 break;
             case "GetLoad":
+                ObjectOutputStream oos = sc.getOos();
+                try {
+                    oos.writeObject(Client.currentLoad);
+
+                } catch (IOException e) {
+                    System.out.println("Error: Could not write in to the stream");
+                }
+
                 //send the current load to requester
                 break;
         }
@@ -90,4 +100,45 @@ public class ClientHelper {
         return null;
     }
 
+
+    /***
+     * This functions gets load from all clients by creating a socket connection for each client.
+     * @param peerList = list of clients that have the file
+     * @return
+     */
+    public static HashMap<Integer, Integer> getLoadFromPeers(List<Integer> peerList) {
+        HashMap<Integer, Integer> loadFromAllPeers = new HashMap<>();
+        for(int i = 0; i < peerList.size(); i++){
+            try {
+                SocketConnection socketConnection = new SocketConnection(peerList.get(i));
+                ObjectOutputStream oos = socketConnection.getOos();
+                ObjectInputStream ois = socketConnection.getOis();
+
+                ClientHelper.sendMessage(oos, "GetLoad");
+                loadFromAllPeers.put(peerList.get(i), (Integer)ois.readObject());
+                System.out.println("Load is here!");
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Error: Could not connect to peer: " + peerList.get(i));
+            }
+        }
+
+        return loadFromAllPeers;
+    }
+
+    /***
+     * This function process the message from client after client inputs the file name to download.
+     * @param trackingServerSocket = Server socket for finding the file using server
+     * @param fname = Name of the file the user wants to download
+     */
+    public static void processMessageFromClient(SocketConnection trackingServerSocket, String fname) {
+        List<Integer> peerList = ClientHelper.sendFindRequest(trackingServerSocket,fname);
+        /* For Testing purposes
+        List<Integer> peerList = new ArrayList<>();
+        peerList.add(8002);
+        peerList.add(8003);
+        */
+        HashMap<Integer, Integer> loadFromAllPeers = getLoadFromPeers(peerList);
+        System.out.println("Function ran perfectly!");
+
+    }
 }

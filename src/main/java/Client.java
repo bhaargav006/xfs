@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -10,22 +12,23 @@ import java.util.Scanner;
  * Driver function of client
  */
 public class Client {
-    ServerSocket serverSocket;
-
-    public Client(int port) {
+    static ServerSocket clientSocket;
+    static Socket clientAsServer;
+    static int currentLoad;
+    public Client(int port, int currentLoad) {
         // Starts a separate thread to listen to requests
-
+        this.currentLoad = currentLoad;
         ClientThread clientThread = new ClientThread(port);
         clientThread.start();
     }
 
     public static void main(String[] args) {
-        Client client = new Client(8001);
+        Client client = new Client(Integer.parseInt(args[0]), currentLoad);
         try {
             SocketConnection trackingServerSocket = new SocketConnection(8000);
+
             List<String> listOfFiles = ClientHelper.getListOfFiles(8001);
             ClientHelper.sendFileSystemContent(trackingServerSocket.getOos(),8001,listOfFiles);
-
             Scanner in = new Scanner(System.in);
             while(true) {
                 System.out.println("********Welcome to XFS--Peer To Peer FileSystem********");
@@ -39,6 +42,9 @@ public class Client {
                         ClientHelper.sendFindRequest(trackingServerSocket,fname);
                         break;
                     case 'D':
+                        System.out.println("Enter filename:");
+                        String downloadFilename = in.nextLine();
+                        ClientHelper.processMessageFromClient(trackingServerSocket, downloadFilename);
                         break;
                     case 'E':
                         break;

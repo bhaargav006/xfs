@@ -20,7 +20,8 @@ public class ClientToClientResponder extends  Thread{
         try{
             while(true) {
                 //process the messages from client
-                String msg = ois.readUTF();
+                String msg = (String)ois.readObject();
+                System.out.println("In C2C responder: " + msg);
                 ClientHelper.processMessage(client, msg);
             }
         }
