@@ -16,6 +16,8 @@ public class Client {
     static Socket clientAsServer;
     static int currentLoad;
     public Client(int port, int currentLoad) {
+        //Start a Sync thread which sends update to Server periodically if the file list changes in Client
+
         // Starts a separate thread to listen to requests
         this.currentLoad = currentLoad;
         ClientThread clientThread = new ClientThread(port);
@@ -27,8 +29,8 @@ public class Client {
         try {
             SocketConnection trackingServerSocket = new SocketConnection(8000);
 
-            List<String> listOfFiles = ClientHelper.getListOfFiles(8001);
-            ClientHelper.sendFileSystemContent(trackingServerSocket.getOos(),8001,listOfFiles);
+            List<String> listOfFiles = ClientHelper.getListOfFiles(Integer.parseInt(args[0]));
+            ClientHelper.sendFileSystemContent(trackingServerSocket.getOos(), Integer.parseInt(args[0]),listOfFiles);
             Scanner in = new Scanner(System.in);
             while(true) {
                 System.out.println("********Welcome to XFS--Peer To Peer FileSystem********");

@@ -30,7 +30,7 @@ public class ClientHelper {
     /***
      * Generic method to receive and parse message from both peer as well as server
      */
-    public static void processMessage(SocketConnection sc, String message) {
+    public static void processMessage(SocketConnection sc, String message, int myPort) {
         String [] msgs = message.split(":");
         switch (msgs[0]) {
             case "Download":
@@ -47,6 +47,10 @@ public class ClientHelper {
 
                 //send the current load to requester
                 break;
+            case "SendAll":
+                getListOfFiles(myPort);
+                sendFileSystemContent(sc.getOos(), myPort, getListOfFiles(myPort));
+            break;
         }
     }
 

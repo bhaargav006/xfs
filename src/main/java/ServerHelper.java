@@ -1,9 +1,6 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /***
  * Impl of all the functions that will be provided by the Tracking Server
@@ -85,5 +82,53 @@ public class ServerHelper {
         }
     }
 
+    public static List<Integer> peerList()  {
+        File file = new File("peerList.properties");
+        FileInputStream fis = null;
+        Properties properties = null;
+        try {
+            fis = new FileInputStream(file);
+            properties = new Properties();
+            properties.load(fis);
+            fis.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        Enumeration keys = properties.keys();
+        List<Integer> peerList = new ArrayList<>();
+        while(keys.hasMoreElements()) {
+            String key = (String) keys.nextElement();
+            Integer port = Integer.parseInt(properties.getProperty(key));
+            peerList.add(port);
+        }
+        return peerList;
+    }
+
+    /***
+     * Used to create the listof owners on startup of server or after if the server is recovered
+     * @param listOfFileOwners
+     */
+    public static void createListOfFileOwners(ConcurrentHashMap<String, Set<Integer>> listOfFileOwners)  {
+        String msg = "SendAll:";
+        List<Integer> peerList = peerList();
+        for(int peer: peerList) {
+            SocketConnection sc = null;
+            try {
+                sc = new SocketConnection(peer);
+                sendMessage(sc.getOos(), msg);
+                if (sc.getOis().readObject().equals("UpdateList")) {
+                    receiveFileList(sc.getOis());
+                }
+                sc.close();
+            } catch (IOException e) {
+                System.out.println("Peer" + peer + "is Not Available!");
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Successfully Created the listOfFileOwners...");
+    }
 }

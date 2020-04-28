@@ -12,11 +12,14 @@ public class SocketConnection {
     private Socket socket;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
+    private int port;
 
     public SocketConnection(int port) throws IOException {
         this.socket = new Socket(InetAddress.getLocalHost(), port);
         this.oos = new ObjectOutputStream(socket.getOutputStream());
         this.ois = new ObjectInputStream(socket.getInputStream());
+        this.port = port;
+
     }
 
     public SocketConnection(Socket socket) throws IOException {
@@ -39,5 +42,8 @@ public class SocketConnection {
     public  void close() throws IOException {
         this.socket.close();
 
+    }
+    public int getPort() {
+        return port;
     }
 }
