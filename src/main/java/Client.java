@@ -1,12 +1,10 @@
-import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * Driver function of client
@@ -14,12 +12,12 @@ import java.util.Scanner;
 public class Client {
     static ServerSocket clientSocket;
     static Socket clientAsServer;
-    static volatile int currentLoad;
-    public Client(int port, int currentLoad) {
+    static volatile AtomicInteger currentLoad;
+    public Client(int port, AtomicInteger currentLoad) {
         //Start a Sync thread which sends update to Server periodically if the file list changes in Client
 
         // Starts a separate thread to listen to requests
-        this.currentLoad = currentLoad;
+        Client.currentLoad = currentLoad;
         ClientThread clientThread = new ClientThread(port);
         clientThread.start();
     }
@@ -48,11 +46,8 @@ public class Client {
                     case 'D': {
                         System.out.println("Enter filename:");
                         String fName = in.nextLine();
-                        ClientHelper.processMessageFromClient(trackingServerSocket, fName);
-                        ArrayList<Integer> peerList = (ArrayList<Integer>)ClientHelper.sendFindRequest(trackingServerSocket, fName);
-                        while(!peerList.isEmpty()){
-                            int idealPeer = ClientHelper.findIdealPeer(peerList);
-                        }
+                        ClientHelper.DownloadFileFromPeers(trackingServerSocket, fName, Integer.parseInt(args[0]));
+                        System.out.println("Download completed.");
                         break;
                     }
                     case 'E':
