@@ -15,12 +15,14 @@ public class ServerHelper {
      * Generic method to receive and parse message from both peer as well as server
      */
     public static void processMessage(SocketConnection client, String message){
-        String [] msgs = message.split(":");
+        String [] msgs = message.split(" ");
+        System.out.println(message);
         switch (msgs[0]) {
             case "UpdateList":
                 receiveFileList(client.getOis());
                 break;
             case "Find":
+                System.out.println("In Find case");
                 sendListOfPeers(client, msgs[1]);
                 break;
         }
@@ -34,7 +36,7 @@ public class ServerHelper {
             ArrayList<String> listOfFilesWOChecksum = new ArrayList<>();
             HashMap<String, String> filesAndCheckSum = new HashMap<>();
             for(String file: listOfFiles) {
-                String[] fileCheckSum = file.split("$$");
+                String[] fileCheckSum = file.split(":-");
                 listOfFilesWOChecksum.add(fileCheckSum[0]);
                 filesAndCheckSum.put(fileCheckSum[0],fileCheckSum[1]);
             }
@@ -67,7 +69,9 @@ public class ServerHelper {
      * @param filename = filename
      */
     private static void sendListOfPeers(SocketConnection client, String filename) {
+        System.out.println("In send list of peers");
         Set<Integer> listOfPeers = TrackingServer.listOfFileOwners.get(filename);
+        System.out.println(listOfPeers);
         if(listOfPeers==null)
             sendMessage(client.getOos(),"null");
         else {
@@ -91,7 +95,7 @@ public class ServerHelper {
     }
 
     public static List<Integer> peerList()  {
-        File file = new File("peerList.properties");
+        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\peerList.properties");
         FileInputStream fis = null;
         Properties properties = null;
         try {
@@ -119,7 +123,7 @@ public class ServerHelper {
      * Used to create the listof owners on startup of server or after if the server is recovered
      */
     public static void createListOfFileOwnersAndCheckSum()  {
-        String msg = "SendAll:";
+        String msg = "SendAll";
         List<Integer> peerList = peerList();
         for(int peer: peerList) {
             SocketConnection sc = null;

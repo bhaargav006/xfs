@@ -1,4 +1,5 @@
 
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Integer.MAX_VALUE;
 import javax.xml.bind.DatatypeConverter;
@@ -6,10 +7,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
 
 /***
  * Impl of all the functions provided by the clients/peers
@@ -34,7 +31,7 @@ public class ClientHelper {
      * Generic method to receive and parse message from both peer as well as server
      */
     public static void processMessage(SocketConnection sc, String message, int myPort) {
-        String [] msgs = message.split(":");
+        String [] msgs = message.split(" ");
         switch (msgs[0]) {
             case "Download":
                 Client.currentLoad.getAndIncrement();
@@ -58,12 +55,12 @@ public class ClientHelper {
             sendMessage(sc.getOos(),"null");
         else {
             sendMessage(sc.getOos(),String.valueOf(fileContent.length));
-            sendMessage(sc.getOos(),String.valueOf(fileContent));
+            sendMessage(sc.getOos(),fileContent);
         }
     }
 
     public static byte[] getFile(String fName, int port){
-        File myFile = new File("/" + port + "/" + fName);
+        File myFile = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
         try {
             FileInputStream fStream = new FileInputStream((myFile));
             byte[] fileContent = new byte[(int) myFile.length()];
@@ -85,15 +82,20 @@ public class ClientHelper {
      * @param port = is the name of the directory belonging to the current peer
      * @return list of files
      */
+
     public static List<String> getListOfFiles(int port){
         List<String> listOfFiles = new ArrayList<>();
-        File folder = new File("/" + port);
+        File folder = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port);
         File[] fileNames = folder.listFiles();
-        for(File f : fileNames) {
-            byte[] content = readFileContent(f);
-            String checksum = getChecksum(content);
-            String fileName = f.getName() + "$$" + checksum;
-            listOfFiles.add(f.getName());
+//        System.out.println("FileNames: " + fileNames);
+        if(fileNames != null){
+            for(File f : fileNames) {
+//                System.out.println(f.getName());
+                byte[] content = readFileContent(f);
+                String checksum = getChecksum(content);
+                String fileName = f.getName() + ":-" + checksum;
+                listOfFiles.add(fileName);
+            }
         }
         return listOfFiles;
     }
@@ -131,16 +133,24 @@ public class ClientHelper {
      * @return list of peers that has the file the caller is looking for
      */
     public static List<Integer> sendFindRequest(SocketConnection tracker, String fName) {
+        System.out.println("Find File: " + fName);
+        List<Integer> listOfPeers = new ArrayList<>();
         ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
         ObjectInputStream ois = tracker.getOis();
         try {
             String msg = (String) ois.readObject();
+            System.out.println("Message: " + msg);
             if(msg.equalsIgnoreCase("null")) {
                 System.out.println("File does not exist. ");
                 return null;
             }
             System.out.println("Size of peerList: " + msg);
-            return (List<Integer>) ois.readObject();
+            Set<Integer> setOfPeers = (Set<Integer>) ois.readObject();
+            for(int i : setOfPeers){
+                listOfPeers.add(i);
+            }
+//            return (List<Integer>) ois.readObject();
+            return listOfPeers;
         } catch (IOException| ClassNotFoundException e) {
             System.out.println("Error: Couldn't get peerList form the tracking server");
         }
@@ -164,6 +174,7 @@ public class ClientHelper {
                 ClientHelper.sendMessage(oos, "GetLoad");
                 loadFromAllPeers.put(peerList.get(i), ((AtomicInteger)ois.readObject()).get());
                 System.out.println("Load is here!");
+                socketConnection.close();
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Error: Could not connect to peer: " + peerList.get(i));
             }
@@ -199,15 +210,17 @@ public class ClientHelper {
                     SocketConnection idealSock = new SocketConnection(idealPeer);
                     sendMessage(idealSock.getOos(),"Download " + fName);
                     String answer = (String)idealSock.getOis().readObject();
+                    System.out.println("Answer: " +answer);
                     if(answer.equalsIgnoreCase("null")){
                         peerList.remove(idealPeer);
                     }
                     else {
                         flag=1;
                         byte[] fileContent = (byte[])idealSock.getOis().readObject();
-                        FileOutputStream fStream = new FileOutputStream("/" + port + "/" + fName);
+                        FileOutputStream fStream = new FileOutputStream("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
                         fStream.write(fileContent,0,Integer.parseInt(answer));
                     }
+                    idealSock.close();
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Error: Couldn't download file from peer: " + idealPeer);
                 }
@@ -231,16 +244,15 @@ public class ClientHelper {
     public static int findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
-        File file = new File("latency.properties");
+        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\latency.properties");
         FileInputStream fileInputStream = null;
         int idealPeer=-1;
         try {
             fileInputStream = new FileInputStream(file);
             Properties prop = new Properties();
             prop.load(fileInputStream);
-            Enumeration<Object> enumeration = prop.keys();
             for(int peer:peerList){
-                int weight = loadFromAllPeers.get(peer)*Integer.getInteger(prop.getProperty(port+"."+peer).split("=")[1]);
+                int weight = loadFromAllPeers.get(peer)*Integer.parseInt(prop.getProperty(port+"."+peer));
                 if(weight < min){
                     min = weight;
                     idealPeer=peer;
