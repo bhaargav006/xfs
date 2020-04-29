@@ -31,7 +31,15 @@ public class ServerHelper {
         try {
             Integer peer= (Integer) ois.readObject();
             ArrayList<String> listOfFiles= (ArrayList<String>) ois.readObject();
-            updateList(peer,listOfFiles);
+            ArrayList<String> listOfFilesWOChecksum = new ArrayList<>();
+            HashMap<String, String> filesAndCheckSum = new HashMap<>();
+            for(String file: listOfFiles) {
+                String[] fileCheckSum = file.split("$$");
+                listOfFilesWOChecksum.add(fileCheckSum[0]);
+                filesAndCheckSum.put(fileCheckSum[0],fileCheckSum[1]);
+            }
+            updateList(peer,listOfFilesWOChecksum);
+            TrackingServer.filesToCheckSum.putAll(filesAndCheckSum);
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error: Couldn't receive fileList from the peer");;
         }
@@ -109,9 +117,8 @@ public class ServerHelper {
 
     /***
      * Used to create the listof owners on startup of server or after if the server is recovered
-     * @param listOfFileOwners
      */
-    public static void createListOfFileOwners(ConcurrentHashMap<String, Set<Integer>> listOfFileOwners)  {
+    public static void createListOfFileOwnersAndCheckSum()  {
         String msg = "SendAll:";
         List<Integer> peerList = peerList();
         for(int peer: peerList) {

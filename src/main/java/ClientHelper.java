@@ -1,8 +1,15 @@
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Integer.MAX_VALUE;
+import javax.xml.bind.DatatypeConverter;
+import java.io.*;
+import java.net.ServerSocket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 /***
  * Impl of all the functions provided by the clients/peers
@@ -82,9 +89,27 @@ public class ClientHelper {
         List<String> listOfFiles = new ArrayList<>();
         File folder = new File("/" + port);
         File[] fileNames = folder.listFiles();
-        for(File f : fileNames)
+        for(File f : fileNames) {
+            byte[] content = readFileContent(f);
+            String checksum = getChecksum(content);
+            String fileName = f.getName() + "$$" + checksum;
             listOfFiles.add(f.getName());
+        }
         return listOfFiles;
+    }
+
+    public static byte[] readFileContent(File f) {
+        int len = (int)f.length();
+        try {
+            FileInputStream fis = new FileInputStream(f);
+            byte[] content = new byte[len];
+            fis.read(content);
+            fis.close();
+            return content;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /***
@@ -229,5 +254,25 @@ public class ClientHelper {
         }
 
         return -1;
+    }
+
+    /***
+     * function to generate checksum for the contents of the file
+     * @param fileContentBytes : all the content
+     * @return checksum string
+     */
+    public static String getChecksum(byte[] fileContentBytes) {
+        MessageDigest md5 = null;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+            md5.update(fileContentBytes);
+            byte[] digest = md5.digest();
+            String checksum = DatatypeConverter.printHexBinary(digest);
+            return checksum;
+        }
+        catch(NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

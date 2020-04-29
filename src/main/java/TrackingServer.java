@@ -11,12 +11,14 @@ public class TrackingServer {
 
     // this map contains a set of ports (peers) that store a file
     static volatile ConcurrentHashMap<String, Set<Integer>> listOfFileOwners;
+    static volatile ConcurrentHashMap<String, String> filesToCheckSum;
     ServerSocket serverSocket;
 
     // the server listens to requests from clients and handles them using ServerToClientResponder
     public TrackingServer(int port) {
         listOfFileOwners = new ConcurrentHashMap<String, Set<Integer>>();
-        ServerHelper.createListOfFileOwners(listOfFileOwners);
+        filesToCheckSum = new ConcurrentHashMap<>();
+        ServerHelper.createListOfFileOwnersAndCheckSum();
         try {
             serverSocket = new ServerSocket(port);
             while(true) {

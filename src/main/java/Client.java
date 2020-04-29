@@ -15,7 +15,8 @@ public class Client {
     static volatile AtomicInteger currentLoad;
     public Client(int port, AtomicInteger currentLoad) {
         //Start a Sync thread which sends update to Server periodically if the file list changes in Client
-
+        FilesSyncThread filesSyncThread = new FilesSyncThread(port);
+        filesSyncThread.start();
         // Starts a separate thread to listen to requests
         Client.currentLoad = currentLoad;
         ClientThread clientThread = new ClientThread(port);
@@ -24,12 +25,9 @@ public class Client {
 
     public static void main(String[] args) {
         //Shouldn't the currentLoad here be 0?
-        Client client = new Client(Integer.parseInt(args[0]), currentLoad);
+        new Client(Integer.parseInt(args[0]), currentLoad);
         try {
             SocketConnection trackingServerSocket = new SocketConnection(8000);
-
-            List<String> listOfFiles = ClientHelper.getListOfFiles(Integer.parseInt(args[0]));
-            ClientHelper.sendFileSystemContent(trackingServerSocket.getOos(), Integer.parseInt(args[0]),listOfFiles);
             Scanner in = new Scanner(System.in);
             while(true) {
                 System.out.println("********Welcome to XFS--Peer To Peer FileSystem********");
