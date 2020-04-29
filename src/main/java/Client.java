@@ -14,7 +14,7 @@ import java.util.Scanner;
 public class Client {
     static ServerSocket clientSocket;
     static Socket clientAsServer;
-    static int currentLoad;
+    static volatile int currentLoad;
     public Client(int port, int currentLoad) {
         //Start a Sync thread which sends update to Server periodically if the file list changes in Client
 
@@ -25,6 +25,7 @@ public class Client {
     }
 
     public static void main(String[] args) {
+        //Shouldn't the currentLoad here be 0?
         Client client = new Client(Integer.parseInt(args[0]), currentLoad);
         try {
             SocketConnection trackingServerSocket = new SocketConnection(8000);
@@ -38,18 +39,23 @@ public class Client {
                 System.out.println("[F] Find \n[D] Download File \n[E] Exit \n");
                 String input = in.nextLine();
                 switch (input.charAt(0)) {
-                    case 'F':
+                    case 'F': {
                         System.out.println("Enter filename:");
-                        String fname = in.nextLine();
-                        ClientHelper.sendFindRequest(trackingServerSocket,fname);
+                        String fName = in.nextLine();
+                        System.out.println(ClientHelper.sendFindRequest(trackingServerSocket, fName));
                         break;
-                    case 'D':
+                    }
+                    case 'D': {
                         System.out.println("Enter filename:");
-                        String downloadFilename = in.nextLine();
-                        ClientHelper.processMessageFromClient(trackingServerSocket, downloadFilename);
+                        String fName = in.nextLine();
+                        ClientHelper.processMessageFromClient(trackingServerSocket, fName);
+                        ArrayList<Integer> peerList = (ArrayList<Integer>)ClientHelper.sendFindRequest(trackingServerSocket, fName);
+                        while(!peerList.isEmpty()){
+                            int idealPeer = ClientHelper.findIdealPeer(peerList);
+                        }
                         break;
+                    }
                     case 'E':
-                        break;
 
                 }
             }

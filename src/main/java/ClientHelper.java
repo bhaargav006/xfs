@@ -1,7 +1,4 @@
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +20,7 @@ public class ClientHelper {
             oos.writeObject(message);
             oos.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error: Couldn't send the " + message + " to output stream");;
         }
     }
 
@@ -34,19 +31,14 @@ public class ClientHelper {
         String [] msgs = message.split(":");
         switch (msgs[0]) {
             case "Download":
-                //Download a file and send to the requester
+                Client.currentLoad++;
+                DownloadFile(sc, getFile(msgs[1], myPort));
                 break;
+
             case "GetLoad":
-                ObjectOutputStream oos = sc.getOos();
-                try {
-                    oos.writeObject(Client.currentLoad);
-
-                } catch (IOException e) {
-                    System.out.println("Error: Could not write in to the stream");
-                }
-
-                //send the current load to requester
+                sendMessage(sc.getOos(),Client.currentLoad);
                 break;
+
             case "SendAll":
                 getListOfFiles(myPort);
                 sendFileSystemContent(sc.getOos(), myPort, getListOfFiles(myPort));
@@ -54,7 +46,29 @@ public class ClientHelper {
         }
     }
 
-    public static Set<Integer> findFile(){
+    private static void DownloadFile(SocketConnection sc, byte[] file) {
+        byte[] fileContent = file;
+        if(fileContent==null)
+            sendMessage(sc.getOos(),"null");
+        else {
+            sendMessage(sc.getOos(),String.valueOf(fileContent.length));
+            sendMessage(sc.getOos(),String.valueOf(fileContent));
+        }
+    }
+
+    public static byte[] getFile(String fName, int port){
+        File myFile = new File("/" + port + "/" + fName);
+        try {
+            FileInputStream fStream = new FileInputStream((myFile));
+            byte[] fileContent = new byte[(int) myFile.length()];
+            fStream.read(fileContent,0,(int)myFile.length());
+            return fileContent;
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: File is not present in this peer");
+        } catch (IOException e) {
+            System.out.println("Error: Can't read the file");
+        }
+
         return null;
     }
 
@@ -86,6 +100,12 @@ public class ClientHelper {
         ClientHelper.sendMessage(oos,listOfFiles);
     }
 
+    /***
+     * Send the find request to the tracking server
+     * @param tracker = socket to tracking server
+     * @param fName = filename the peer is looking for
+     * @return list of peers that has the file the caller is looking for
+     */
     public static List<Integer> sendFindRequest(SocketConnection tracker, String fName) {
         ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
         ObjectInputStream ois = tracker.getOis();
@@ -135,7 +155,7 @@ public class ClientHelper {
      * @param fname = Name of the file the user wants to download
      */
     public static void processMessageFromClient(SocketConnection trackingServerSocket, String fname) {
-        List<Integer> peerList = ClientHelper.sendFindRequest(trackingServerSocket,fname);
+        List<Integer> peerList = ClientHelper.sendFindRequest(trackingServerSocket, fname);
         /* For Testing purposes
         List<Integer> peerList = new ArrayList<>();
         peerList.add(8002);
@@ -143,6 +163,14 @@ public class ClientHelper {
         */
         HashMap<Integer, Integer> loadFromAllPeers = getLoadFromPeers(peerList);
         System.out.println("Function ran perfectly!");
+    }
 
+    /***
+     * Makes a decision to choose the ideal peer from peerList
+     * @param peerList = list of all peers having the data
+     * @return returns the port of the ideal peer
+     */
+    public static int findIdealPeer(ArrayList<Integer> peerList) {
+        return 0;
     }
 }
