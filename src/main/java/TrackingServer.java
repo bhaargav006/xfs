@@ -19,6 +19,8 @@ public class TrackingServer {
         listOfFileOwners = new ConcurrentHashMap<String, Set<Integer>>();
         filesToCheckSum = new ConcurrentHashMap<>();
         ServerHelper.createListOfFileOwnersAndCheckSum();
+        System.out.println(listOfFileOwners);
+        System.out.println(filesToCheckSum);
         try {
             serverSocket = new ServerSocket(port);
             while(true) {

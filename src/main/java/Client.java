@@ -24,8 +24,7 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        //Shouldn't the currentLoad here be 0?
-        new Client(Integer.parseInt(args[0]), currentLoad);
+        new Client(Integer.parseInt(args[0]), new AtomicInteger(0));
         try {
             SocketConnection trackingServerSocket = new SocketConnection(8000);
             Scanner in = new Scanner(System.in);
