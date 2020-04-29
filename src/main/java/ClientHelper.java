@@ -1,3 +1,6 @@
+
+import java.util.concurrent.atomic.AtomicInteger;
+import static java.lang.Integer.MAX_VALUE;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.ServerSocket;
@@ -23,7 +26,7 @@ public class ClientHelper {
             oos.writeObject(message);
             oos.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error: Couldn't send the " + message + " to output stream");
         }
     }
 
@@ -34,19 +37,14 @@ public class ClientHelper {
         String [] msgs = message.split(":");
         switch (msgs[0]) {
             case "Download":
-                //Download a file and send to the requester
+                Client.currentLoad.getAndIncrement();
+                DownloadFile(sc, getFile(msgs[1], myPort));
                 break;
+
             case "GetLoad":
-                ObjectOutputStream oos = sc.getOos();
-                try {
-                    oos.writeObject(Client.currentLoad);
-
-                } catch (IOException e) {
-                    System.out.println("Error: Could not write in to the stream");
-                }
-
-                //send the current load to requester
+                sendMessage(sc.getOos(),Client.currentLoad);
                 break;
+
             case "SendAll":
                 getListOfFiles(myPort);
                 sendFileSystemContent(sc.getOos(), myPort, getListOfFiles(myPort));
@@ -54,7 +52,29 @@ public class ClientHelper {
         }
     }
 
-    public static Set<Integer> findFile(){
+    private static void DownloadFile(SocketConnection sc, byte[] file) {
+        byte[] fileContent = file;
+        if(fileContent==null)
+            sendMessage(sc.getOos(),"null");
+        else {
+            sendMessage(sc.getOos(),String.valueOf(fileContent.length));
+            sendMessage(sc.getOos(),String.valueOf(fileContent));
+        }
+    }
+
+    public static byte[] getFile(String fName, int port){
+        File myFile = new File("/" + port + "/" + fName);
+        try {
+            FileInputStream fStream = new FileInputStream((myFile));
+            byte[] fileContent = new byte[(int) myFile.length()];
+            fStream.read(fileContent,0,(int)myFile.length());
+            return fileContent;
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: File is not present in this peer");
+        } catch (IOException e) {
+            System.out.println("Error: Can't read the file");
+        }
+
         return null;
     }
 
@@ -104,6 +124,12 @@ public class ClientHelper {
         ClientHelper.sendMessage(oos,listOfFiles);
     }
 
+    /***
+     * Send the find request to the tracking server
+     * @param tracker = socket to tracking server
+     * @param fName = filename the peer is looking for
+     * @return list of peers that has the file the caller is looking for
+     */
     public static List<Integer> sendFindRequest(SocketConnection tracker, String fName) {
         ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
         ObjectInputStream ois = tracker.getOis();
@@ -114,8 +140,7 @@ public class ClientHelper {
                 return null;
             }
             System.out.println("Size of peerList: " + msg);
-            List<Integer> peerList = (ArrayList<Integer>) ois.readObject();
-            return peerList;
+            return (List<Integer>) ois.readObject();
         } catch (IOException| ClassNotFoundException e) {
             System.out.println("Error: Couldn't get peerList form the tracking server");
         }
@@ -137,7 +162,7 @@ public class ClientHelper {
                 ObjectInputStream ois = socketConnection.getOis();
 
                 ClientHelper.sendMessage(oos, "GetLoad");
-                loadFromAllPeers.put(peerList.get(i), (Integer)ois.readObject());
+                loadFromAllPeers.put(peerList.get(i), ((AtomicInteger)ois.readObject()).get());
                 System.out.println("Load is here!");
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Error: Could not connect to peer: " + peerList.get(i));
@@ -150,17 +175,85 @@ public class ClientHelper {
     /***
      * This function process the message from client after client inputs the file name to download.
      * @param trackingServerSocket = Server socket for finding the file using server
-     * @param fname = Name of the file the user wants to download
+     * @param fName = Name of the file the user wants to download
+     * @param port = port of the running peer
      */
-    public static void processMessageFromClient(SocketConnection trackingServerSocket, String fname) {
-        List<Integer> peerList = ClientHelper.sendFindRequest(trackingServerSocket,fname);
+    public static void DownloadFileFromPeers(SocketConnection trackingServerSocket, String fName, int port) {
+        List<Integer> peerList = ClientHelper.sendFindRequest(trackingServerSocket, fName);
+        if(peerList==null)
+            return;
+
         /* For Testing purposes
         List<Integer> peerList = new ArrayList<>();
         peerList.add(8002);
         peerList.add(8003);
         */
         HashMap<Integer, Integer> loadFromAllPeers = getLoadFromPeers(peerList);
-        System.out.println("Function ran perfectly!");
+        int flag=0;
+
+        while(!peerList.isEmpty() && flag==0){
+
+            int idealPeer = ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
+            if(idealPeer!=-1){
+                try {
+                    SocketConnection idealSock = new SocketConnection(idealPeer);
+                    sendMessage(idealSock.getOos(),"Download " + fName);
+                    String answer = (String)idealSock.getOis().readObject();
+                    if(answer.equalsIgnoreCase("null")){
+                        peerList.remove(idealPeer);
+                    }
+                    else {
+                        flag=1;
+                        byte[] fileContent = (byte[])idealSock.getOis().readObject();
+                        FileOutputStream fStream = new FileOutputStream("/" + port + "/" + fName);
+                        fStream.write(fileContent,0,Integer.parseInt(answer));
+                    }
+                } catch (IOException | ClassNotFoundException e) {
+                    System.out.println("Error: Couldn't download file from peer: " + idealPeer);
+                }
+
+            }
+            else {
+                System.out.println("Error: There are no ideal peers to download this file");
+                return;
+            }
+        }
+    }
+
+    /***
+     * Makes a decision to choose the ideal peer from peerList
+     * The weight is inversely proportional to both latency and load.
+     * @param peerList = list of all peers having the data
+     * @param port = port of the running peer
+     * @param loadFromAllPeers
+     * @return returns the port of the ideal peer
+     */
+    public static int findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
+        //TODO : NULL checks to see if things are not breaking.
+        int min=MAX_VALUE;
+        File file = new File("latency.properties");
+        FileInputStream fileInputStream = null;
+        int idealPeer=-1;
+        try {
+            fileInputStream = new FileInputStream(file);
+            Properties prop = new Properties();
+            prop.load(fileInputStream);
+            Enumeration<Object> enumeration = prop.keys();
+            for(int peer:peerList){
+                int weight = loadFromAllPeers.get(peer)*Integer.getInteger(prop.getProperty(port+"."+peer).split("=")[1]);
+                if(weight < min){
+                    min = weight;
+                    idealPeer=peer;
+                }
+            }
+            return idealPeer;
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: Couldn't locate the properties file");
+        } catch (IOException e) {
+            System.out.println("Error: Couldn't read the properties file");
+        }
+
+        return -1;
     }
 
     /***

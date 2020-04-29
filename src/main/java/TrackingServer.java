@@ -30,11 +30,11 @@ public class TrackingServer {
                     clientResponder.start();
                 } catch (IOException e) {
                     client.close();
-                    System.out.println("Error in the server sockets while accepting peers");
+                    System.out.println("Error: Tracking server not accepting peers");
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error: Can't create a tracking server socket");
         }
     }
 
