@@ -21,12 +21,12 @@ public class ClientToClientResponder extends  Thread{
     @Override
     public void run() {
         try{
-            while(true) {
+//            while(true) {
                 //process the messages from client
                 String msg = (String)ois.readObject();
                 System.out.println("In C2C responder: " + msg);
                 ClientHelper.processMessage(client, msg, myPort);
-            }
+//            }
         }
         catch (Exception e) {
             e.printStackTrace();

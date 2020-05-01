@@ -123,7 +123,9 @@ public class ClientHelper {
     public static void sendFileSystemContent(ObjectOutputStream oos, int port, List<String> listOfFiles){
         ClientHelper.sendMessage(oos,"UpdateList");
         ClientHelper.sendMessage(oos,port);
-        ClientHelper.sendMessage(oos,listOfFiles);
+        if(listOfFiles != null || !listOfFiles.isEmpty()){
+            ClientHelper.sendMessage(oos,listOfFiles);
+        }
     }
 
     /***
@@ -252,10 +254,15 @@ public class ClientHelper {
             Properties prop = new Properties();
             prop.load(fileInputStream);
             for(int peer:peerList){
-                int weight = loadFromAllPeers.get(peer)*Integer.parseInt(prop.getProperty(port+"."+peer));
-                if(weight < min){
-                    min = weight;
-                    idealPeer=peer;
+                if(peer != port){
+                    System.out.println("Peer: " +peer);
+                    System.out.println("Port: " +port);
+                    System.out.println(prop.getProperty(port+"."+peer));
+                    int weight = loadFromAllPeers.get(peer)*Integer.parseInt(prop.getProperty(port+"."+peer));
+                    if(weight < min){
+                        min = weight;
+                        idealPeer=peer;
+                    }
                 }
             }
             return idealPeer;
