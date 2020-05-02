@@ -11,15 +11,13 @@ public class ServerToClientResponder extends Thread {
     }
     public void run() {
         try{
-            while(true) {
-
-                ObjectInputStream ois = client.getOis();
-                String msg = (String) ois.readObject();
-                ServerHelper.processMessage(client, msg);
-            }
+            ObjectInputStream ois = client.getOis();
+            System.out.println("I am here!");
+            String msg = (String) ois.readObject();
+            ServerHelper.processMessage(client, msg);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("One of the clients disconnected.");
         }
     }
 }

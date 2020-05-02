@@ -42,6 +42,7 @@ public class ServerHelper {
             }
             updateList(peer,listOfFilesWOChecksum);
             TrackingServer.filesToCheckSum.putAll(filesAndCheckSum);
+            System.out.println("Done receiving files!");
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Error: Couldn't receive fileList from the peer");;
         }
