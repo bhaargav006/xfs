@@ -154,7 +154,20 @@ public class ClientHelper {
 //            return (List<Integer>) ois.readObject();
             return listOfPeers;
         } catch (IOException| ClassNotFoundException e) {
-            System.out.println("Error: Couldn't get peerList form the tracking server");
+            System.out.println("Server Down.... Couldn't get peerList...Waiting for the Server to come back");
+            //blocking the client thread for server to come back
+            Client.serverStatus = false;
+            new ServerHealth().start();
+            while(!Client.serverStatus) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+
+            }
+            System.out.println("Server is back online");
+            sendFindRequest(tracker,fName);
         }
         return null;
     }

@@ -22,9 +22,20 @@ public class ServerHelper {
                 receiveFileList(client.getOis());
                 break;
             case "Find":
-                System.out.println("In Find case");
                 sendListOfPeers(client, msgs[1]);
                 break;
+            case "Ping":
+                healthCheck(client);
+                break;
+        }
+    }
+
+    public static void healthCheck(SocketConnection client) {
+        try {
+            client.getOos().writeUTF("OK");
+            client.getOos().flush();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
