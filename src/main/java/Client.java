@@ -13,6 +13,7 @@ public class Client {
     static ServerSocket clientSocket;
     static Socket clientAsServer;
     static volatile AtomicInteger currentLoad;
+    static boolean serverStatus;
     public Client(int port, AtomicInteger currentLoad) {
         //Start a Sync thread which sends update to Server periodically if the file list changes in Client
         FilesSyncThread filesSyncThread = new FilesSyncThread(port);
