@@ -22,10 +22,10 @@ public class ClientToClientResponder extends  Thread{
     public void run() {
         try{
 //            while(true) {
-                //process the messages from client
-                String msg = (String)ois.readObject();
-                System.out.println("In C2C responder: " + msg);
-                ClientHelper.processMessage(client, msg, myPort);
+            //process the messages from client
+            String msg = (String)ois.readObject();
+            System.out.println("In C2C responder: " + msg);
+            ClientHelper.processMessage(client, msg, myPort);
 //            }
         }
         catch (Exception e) {

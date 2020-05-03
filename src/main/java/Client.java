@@ -44,17 +44,18 @@ public class Client {
                 case 'F': {
                     System.out.println("Enter filename:");
                     String fName = in.nextLine();
-                    System.out.println(Objects.requireNonNull(ClientHelper.sendFindRequest(fName)).getKey());
+                    ClientHelper.sendFindRequest(fName);
                     break;
                 }
                 case 'D': {
                     System.out.println("Enter filename:");
                     String fName = in.nextLine();
+                    System.out.println("Start Time: " +System.currentTimeMillis());
                     if(!ClientHelper.doesFileExist(fName, Integer.parseInt(args[0]))) {
                         ClientHelper.DownloadFileFromPeers(fName, Integer.parseInt(args[0]));
-                        System.out.println("Download completed.");
                     }
                     else System.out.println("File already exists with the current peer.");
+                    System.out.println("End Time: " +System.currentTimeMillis());
                     break;
                 }
                 case 'E':

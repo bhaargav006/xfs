@@ -49,7 +49,7 @@ public class ClientHelper {
             case "SendAll":
                 getListOfFiles(myPort);
                 sendFileSystemContent(sc.getOos(), myPort, getListOfFiles(myPort));
-            break;
+                break;
         }
     }
 
@@ -64,7 +64,8 @@ public class ClientHelper {
     }
 
     public static byte[] getFile(String fName, int port){
-        File myFile = new File("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/" + port + "/" + fName);
+
+        File myFile = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
         try {
             FileInputStream fStream = new FileInputStream((myFile));
             byte[] fileContent = new byte[(int) myFile.length()];
@@ -92,7 +93,7 @@ public class ClientHelper {
         List<String> listOfFiles = new ArrayList<>();
 //        Path relPath = Paths.get("8001");
 //        System.out.println(relPath);
-        File folder = new File("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/" + port);
+        File folder = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port);
         File[] fileNames = folder.listFiles();
 //        System.out.println("FileNames: " + fileNames);
         if(fileNames != null){
@@ -160,6 +161,7 @@ public class ClientHelper {
             tracker.close();
 
             List<Integer> listOfPeers = new ArrayList<>(setOfPeers);
+            System.out.println("Peerlist:" + listOfPeers);
             return new Pair(listOfPeers,checksum);
         } catch (IOException| ClassNotFoundException e) {
             System.out.println("Server Down.... Couldn't get peerList...Waiting for the Server to come back");
@@ -176,9 +178,8 @@ public class ClientHelper {
             }
             System.out.println("Server is back online");
             System.out.println("Retrying FIND request....");
-            sendFindRequest(fName);
+            return sendFindRequest(fName);
         }
-        return null;
     }
 
 
@@ -235,28 +236,35 @@ public class ClientHelper {
                     String answer = (String)idealSock.getOis().readObject();
                     System.out.println("Answer: " +answer);
                     if(answer.equalsIgnoreCase("null")){
-                        peerList.remove(idealPeer);
+                        peerList.remove(Integer.valueOf(idealPeer));
                     }
                     else {
 
                         byte[] fileContent = (byte[])idealSock.getOis().readObject();
                         Path currentDir = Paths.get(".");
                         System.out.println(currentDir);
-                        FileOutputStream fStream = new FileOutputStream("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/" + port + "/" + fName);
+                        FileOutputStream fStream = new FileOutputStream("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
                         fStream.write(fileContent,0,Integer.parseInt(answer));
                         fStream.close();
                         flag = checkChecksum(checksum,fileContent);
+                        System.out.println("Flag value: " + flag);
                         if(flag==0){
-                            Files.deleteIfExists(Paths.get("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/" + port + "/" + fName));
+                            Files.deleteIfExists(Paths.get("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName));
+                        }
+                        else {
+                            System.out.println("Download completed.");
                         }
                     }
-                    peerList.remove(idealPeer);
+
                     idealSock.close();
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Error: Couldn't download file from peer: " + idealPeer);
                     flag=0;
                 } catch (InterruptedException e) {
                     System.out.println("Error: thread couldn't be interrupted");
+                } finally {
+                    if(idealPeer != -1)
+                        peerList.remove(Integer.valueOf(idealPeer));
                 }
 
             }
@@ -285,7 +293,7 @@ public class ClientHelper {
     public static Pair<Integer,Integer> findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
-        File file = new File("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/latency.properties");
+        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\latency.properties");
         FileInputStream fileInputStream = null;
         int idealPeer=-1;
         try {
@@ -299,10 +307,12 @@ public class ClientHelper {
                     System.out.println("Port: " +port);
                     System.out.println(prop.getProperty(port+"."+peer));
                     latency = Integer.parseInt(prop.getProperty(port+"."+peer));
-                    int weight = loadFromAllPeers.get(peer)*latency;
-                    if(weight < min){
-                        min = weight;
-                        idealPeer=peer;
+                    if(loadFromAllPeers.containsKey(peer)){
+                        int weight = loadFromAllPeers.get(peer)*latency;
+                        if(weight < min){
+                            min = weight;
+                            idealPeer=peer;
+                        }
                     }
                 }
             }
@@ -343,7 +353,7 @@ public class ClientHelper {
      */
     public static boolean doesFileExist(String fName, int port) {
         List<String> listOfFiles = new ArrayList<>();
-        File folder = new File("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/" + port);
+        File folder = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port);
         File[] fileNames = folder.listFiles();
         if(fileNames != null){
             for(File f : fileNames) {
