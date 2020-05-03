@@ -60,7 +60,7 @@ public class ClientHelper {
     }
 
     public static byte[] getFile(String fName, int port){
-        File myFile = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
+        File myFile = new File("D:\\Projects\\xfs\\src\\main\\" + port + "\\" + fName);
         try {
             FileInputStream fStream = new FileInputStream((myFile));
             byte[] fileContent = new byte[(int) myFile.length()];
@@ -85,7 +85,7 @@ public class ClientHelper {
 
     public static List<String> getListOfFiles(int port){
         List<String> listOfFiles = new ArrayList<>();
-        File folder = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port);
+        File folder = new File("D:\\Projects\\xfs\\src\\main\\" + port);
         File[] fileNames = folder.listFiles();
 //        System.out.println("FileNames: " + fileNames);
         if(fileNames != null){
@@ -130,16 +130,18 @@ public class ClientHelper {
 
     /***
      * Send the find request to the tracking server
-     * @param tracker = socket to tracking server
      * @param fName = filename the peer is looking for
      * @return list of peers that has the file the caller is looking for
      */
-    public static List<Integer> sendFindRequest(SocketConnection tracker, String fName) {
+    public static List<Integer> sendFindRequest(String fName) {
+        SocketConnection tracker = null;
+        try {
+            tracker = new SocketConnection(8000);
         System.out.println("Find File: " + fName);
         List<Integer> listOfPeers = new ArrayList<>();
         ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
         ObjectInputStream ois = tracker.getOis();
-        try {
+
             String msg = (String) ois.readObject();
             System.out.println("Message: " + msg);
             if(msg.equalsIgnoreCase("null")) {
@@ -152,6 +154,7 @@ public class ClientHelper {
                 listOfPeers.add(i);
             }
 //            return (List<Integer>) ois.readObject();
+            tracker.close();
             return listOfPeers;
         } catch (IOException| ClassNotFoundException e) {
             System.out.println("Server Down.... Couldn't get peerList...Waiting for the Server to come back");
@@ -167,7 +170,7 @@ public class ClientHelper {
 
             }
             System.out.println("Server is back online");
-            sendFindRequest(tracker,fName);
+            sendFindRequest(fName);
         }
         return null;
     }
@@ -204,8 +207,8 @@ public class ClientHelper {
      * @param fName = Name of the file the user wants to download
      * @param port = port of the running peer
      */
-    public static void DownloadFileFromPeers(SocketConnection trackingServerSocket, String fName, int port) {
-        List<Integer> peerList = ClientHelper.sendFindRequest(trackingServerSocket, fName);
+    public static void DownloadFileFromPeers(String fName, int port) {
+        List<Integer> peerList = ClientHelper.sendFindRequest(fName);
         if(peerList==null)
             return;
 
@@ -232,7 +235,7 @@ public class ClientHelper {
                     else {
                         flag=1;
                         byte[] fileContent = (byte[])idealSock.getOis().readObject();
-                        FileOutputStream fStream = new FileOutputStream("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
+                        FileOutputStream fStream = new FileOutputStream("D:\\Projects\\xfs\\src\\main\\" + port + "\\" + fName);
                         fStream.write(fileContent,0,Integer.parseInt(answer));
                     }
                     idealSock.close();
@@ -259,7 +262,7 @@ public class ClientHelper {
     public static int findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
-        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\latency.properties");
+        File file = new File("D:\\Projects\\xfs\\src\\main\\java\\latency.properties");
         FileInputStream fileInputStream = null;
         int idealPeer=-1;
         try {
