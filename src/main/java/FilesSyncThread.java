@@ -20,6 +20,11 @@ public class FilesSyncThread extends Thread {
             } catch (InterruptedException e) {
                 System.out.println("Exception in FileSystem Thread");
             } catch (IOException e) {
+                try {
+                    Thread.sleep(20000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
                 System.out.println("Server Not found...Retrying...");
             }
         }

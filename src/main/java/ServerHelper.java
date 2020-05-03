@@ -32,6 +32,7 @@ public class ServerHelper {
 
     public static void healthCheck(SocketConnection client) {
         try {
+            System.out.println("received health req");
             client.getOos().writeUTF("OK");
             client.getOos().flush();
         } catch (IOException e) {
@@ -107,7 +108,7 @@ public class ServerHelper {
     }
 
     public static List<Integer> peerList()  {
-        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\peerList.properties");
+        File file = new File("D:\\Projects\\xfs\\src\\main\\java\\peerList.properties");
         FileInputStream fis = null;
         Properties properties = null;
         try {

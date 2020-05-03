@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * Driver function of client
+ * Server is assumed at 8000 port
  */
 public class Client {
     static ServerSocket clientSocket;
@@ -26,8 +27,6 @@ public class Client {
 
     public static void main(String[] args) {
         new Client(Integer.parseInt(args[0]), new AtomicInteger(0));
-        try {
-            SocketConnection trackingServerSocket = new SocketConnection(8000);
             Scanner in = new Scanner(System.in);
             while(true) {
                 System.out.println("********Welcome to XFS--Peer To Peer FileSystem********");
@@ -38,13 +37,13 @@ public class Client {
                     case 'F': {
                         System.out.println("Enter filename:");
                         String fName = in.nextLine();
-                        System.out.println(ClientHelper.sendFindRequest(trackingServerSocket, fName));
+                        System.out.println(ClientHelper.sendFindRequest(fName));
                         break;
                     }
                     case 'D': {
                         System.out.println("Enter filename:");
                         String fName = in.nextLine();
-                        ClientHelper.DownloadFileFromPeers(trackingServerSocket, fName, Integer.parseInt(args[0]));
+                        ClientHelper.DownloadFileFromPeers(fName, Integer.parseInt(args[0]));
                         System.out.println("Download completed.");
                         break;
                     }
@@ -52,9 +51,6 @@ public class Client {
 
                 }
             }
-        } catch (IOException e) {
-            System.out.println("Tracking server is down.");;
-        }
 
     }
 }
