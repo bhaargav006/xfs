@@ -1,10 +1,15 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.System.exit;
 
 /***
  * Driver function of client
@@ -26,31 +31,36 @@ public class Client {
     }
 
     public static void main(String[] args) {
+//        Path relPath = Paths.get("8001");
+//        System.out.println(relPath.toAbsolutePath());
         new Client(Integer.parseInt(args[0]), new AtomicInteger(0));
-            Scanner in = new Scanner(System.in);
-            while(true) {
-                System.out.println("********Welcome to XFS--Peer To Peer FileSystem********");
-                System.out.println();
-                System.out.println("[F] Find \n[D] Download File \n[E] Exit \n");
-                String input = in.nextLine();
-                switch (input.charAt(0)) {
-                    case 'F': {
-                        System.out.println("Enter filename:");
-                        String fName = in.nextLine();
-                        System.out.println(ClientHelper.sendFindRequest(fName));
-                        break;
-                    }
-                    case 'D': {
-                        System.out.println("Enter filename:");
-                        String fName = in.nextLine();
+        Scanner in = new Scanner(System.in);
+        while(true) {
+            System.out.println("********Welcome to XFS--Peer To Peer FileSystem********");
+            System.out.println();
+            System.out.println("[F] Find \n[D] Download File \n[E] Exit \n");
+            String input = in.nextLine();
+            switch (input.charAt(0)) {
+                case 'F': {
+                    System.out.println("Enter filename:");
+                    String fName = in.nextLine();
+                    System.out.println(Objects.requireNonNull(ClientHelper.sendFindRequest(fName)).getKey());
+                    break;
+                }
+                case 'D': {
+                    System.out.println("Enter filename:");
+                    String fName = in.nextLine();
+                    if(!ClientHelper.doesFileExist(fName, Integer.parseInt(args[0]))) {
                         ClientHelper.DownloadFileFromPeers(fName, Integer.parseInt(args[0]));
                         System.out.println("Download completed.");
-                        break;
                     }
-                    case 'E':
-
+                    else System.out.println("File already exists with the current peer.");
+                    break;
                 }
+                case 'E':
+                    System.out.println("Thank you. Stay safe!");
+                    exit(0);
             }
-
+        }
     }
 }
