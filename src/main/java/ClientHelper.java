@@ -224,13 +224,13 @@ public class ClientHelper {
 
         while(!peerList.isEmpty() && flag==0){
 
-            Pair idealPair= ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
-            int idealPeer = (int) idealPair.getKey();
+            Pair<Integer,Integer> idealPair= ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
+            int idealPeer = idealPair.getKey();
             if(idealPeer!=-1){
                 try {
                     SocketConnection idealSock = new SocketConnection(idealPeer);
-                    System.out.println("Contacting ideal peer. This will take some time...");
-                    Thread.sleep((int) idealPair.getValue());
+                    System.out.println("Contacting ideal peer: " + idealPeer + ". This will take some time...");
+                    Thread.sleep(idealPair.getValue());
                     sendMessage(idealSock.getOos(),"Download " + fName);
                     String answer = (String)idealSock.getOis().readObject();
                     System.out.println("Answer: " +answer);
@@ -250,9 +250,11 @@ public class ClientHelper {
                             Files.deleteIfExists(Paths.get("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/" + port + "/" + fName));
                         }
                     }
+                    peerList.remove(idealPeer);
                     idealSock.close();
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Error: Couldn't download file from peer: " + idealPeer);
+                    flag=0;
                 } catch (InterruptedException e) {
                     System.out.println("Error: thread couldn't be interrupted");
                 }
@@ -280,7 +282,7 @@ public class ClientHelper {
      * @param loadFromAllPeers
      * @return returns the port of the ideal peer
      */
-    public static Pair findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
+    public static Pair<Integer,Integer> findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
         File file = new File("/Users/bhaargavsriraman/Desktop/UMN/Git/xfs/src/main/java/latency.properties");
