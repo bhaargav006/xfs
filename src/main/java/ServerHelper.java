@@ -70,7 +70,7 @@ public class ServerHelper {
             if(TrackingServer.listOfFileOwners.get(file)==null){
                 Set<Integer> owner = new HashSet<>();
                 owner.add(peer);
-               TrackingServer.listOfFileOwners.put(file,owner);
+                TrackingServer.listOfFileOwners.put(file,owner);
             }
             else TrackingServer.listOfFileOwners.get(file).add(peer);
         }
@@ -109,7 +109,7 @@ public class ServerHelper {
     }
 
     public static List<Integer> peerList()  {
-        File file = new File("D:\\Projects\\xfs\\src\\main\\java\\peerList.properties");
+        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\peerList.properties");
         FileInputStream fis = null;
         Properties properties = null;
         try {
