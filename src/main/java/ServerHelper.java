@@ -90,6 +90,7 @@ public class ServerHelper {
         else {
             sendMessage(client.getOos(),String.valueOf(listOfPeers.size()));
             sendMessage(client.getOos(),listOfPeers);
+            sendMessage(client.getOos(),TrackingServer.filesToCheckSum.get(filename));
         }
     }
 
