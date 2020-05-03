@@ -43,8 +43,11 @@ public class Client {
                     case 'D': {
                         System.out.println("Enter filename:");
                         String fName = in.nextLine();
-                        ClientHelper.DownloadFileFromPeers(fName, Integer.parseInt(args[0]));
-                        System.out.println("Download completed.");
+                        if(!ClientHelper.doesFileExist(fName, Integer.parseInt(args[0]))) {
+                            ClientHelper.DownloadFileFromPeers(fName, Integer.parseInt(args[0]));
+                            System.out.println("Download completed.");
+                        }
+                        else System.out.println("File already exists with the current peer.");
                         break;
                     }
                     case 'E':

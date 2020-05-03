@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Integer.MAX_VALUE;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
-import java.net.ServerSocket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -140,8 +139,7 @@ public class ClientHelper {
         try {
             tracker = new SocketConnection(8000);
         System.out.println("Find File: " + fName);
-        List<Integer> listOfPeers = new ArrayList<>();
-        ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
+            ClientHelper.sendMessage(tracker.getOos(),"Find " + fName);
         ObjectInputStream ois = tracker.getOis();
 
             String msg = (String) ois.readObject();
@@ -152,10 +150,7 @@ public class ClientHelper {
             }
             System.out.println("Size of peerList: " + msg);
             Set<Integer> setOfPeers = (Set<Integer>) ois.readObject();
-            for(int i : setOfPeers){
-                listOfPeers.add(i);
-            }
-//            return (List<Integer>) ois.readObject();
+            List<Integer> listOfPeers = new ArrayList<>(setOfPeers);
             tracker.close();
             return listOfPeers;
         } catch (IOException| ClassNotFoundException e) {
@@ -205,7 +200,6 @@ public class ClientHelper {
 
     /***
      * This function process the message from client after client inputs the file name to download.
-     * @param trackingServerSocket = Server socket for finding the file using server
      * @param fName = Name of the file the user wants to download
      * @param port = port of the running peer
      */
@@ -224,12 +218,13 @@ public class ClientHelper {
 
         while(!peerList.isEmpty() && flag==0){
 
-            Pair<Integer,Integer> idealPair= ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
-            int idealPeer = idealPair.getKey();
+            Pair idealPair= ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
+            int idealPeer = (int) idealPair.getKey();
             if(idealPeer!=-1){
                 try {
                     SocketConnection idealSock = new SocketConnection(idealPeer);
-                    Thread.sleep(idealPair.getValue());
+                    System.out.println("Contacting ideal peer. This will take some time...");
+                    Thread.sleep((int) idealPair.getValue());
                     sendMessage(idealSock.getOos(),"Download " + fName);
                     String answer = (String)idealSock.getOis().readObject();
                     System.out.println("Answer: " +answer);
@@ -265,7 +260,7 @@ public class ClientHelper {
      * @param loadFromAllPeers
      * @return returns the port of the ideal peer
      */
-    public static Pair<Integer,Integer> findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
+    public static Pair findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
         File file = new File("D:\\Projects\\xfs\\src\\main\\java\\latency.properties");
@@ -296,7 +291,7 @@ public class ClientHelper {
             System.out.println("Error: Couldn't read the properties file");
         }
 
-        return -1;
+        return new Pair(-1,0);
     }
 
     /***
@@ -310,12 +305,30 @@ public class ClientHelper {
             md5 = MessageDigest.getInstance("MD5");
             md5.update(fileContentBytes);
             byte[] digest = md5.digest();
-            String checksum = DatatypeConverter.printHexBinary(digest);
-            return checksum;
+            return DatatypeConverter.printHexBinary(digest);
         }
         catch(NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /***
+     * Checks if the file provided already exist with the peer
+     * @param fName: Name of the file
+     * @param port: Port of the host peer
+     * @return: if the file is present or not.
+     */
+    public static boolean doesFileExist(String fName, int port) {
+        List<String> listOfFiles = new ArrayList<>();
+        File folder = new File("D:\\Projects\\xfs\\src\\main\\" + port);
+        File[] fileNames = folder.listFiles();
+        if(fileNames != null){
+            for(File f : fileNames) {
+                if(f.getName().equalsIgnoreCase(fName))
+                    return true;
+            }
+        }
+        return false;
     }
 }
