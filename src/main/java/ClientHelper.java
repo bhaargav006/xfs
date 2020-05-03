@@ -1,4 +1,6 @@
 
+import javafx.util.Pair;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Integer.MAX_VALUE;
@@ -222,10 +224,12 @@ public class ClientHelper {
 
         while(!peerList.isEmpty() && flag==0){
 
-            int idealPeer = ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
+            Pair<Integer,Integer> idealPair= ClientHelper.findIdealPeer(peerList, port, loadFromAllPeers);
+            int idealPeer = idealPair.getKey();
             if(idealPeer!=-1){
                 try {
                     SocketConnection idealSock = new SocketConnection(idealPeer);
+                    Thread.sleep(idealPair.getValue());
                     sendMessage(idealSock.getOos(),"Download " + fName);
                     String answer = (String)idealSock.getOis().readObject();
                     System.out.println("Answer: " +answer);
@@ -241,6 +245,8 @@ public class ClientHelper {
                     idealSock.close();
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Error: Couldn't download file from peer: " + idealPeer);
+                } catch (InterruptedException e) {
+                    System.out.println("Error: thread couldn't be interrupted");
                 }
 
             }
@@ -259,13 +265,14 @@ public class ClientHelper {
      * @param loadFromAllPeers
      * @return returns the port of the ideal peer
      */
-    public static int findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
+    public static Pair<Integer,Integer> findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
         File file = new File("D:\\Projects\\xfs\\src\\main\\java\\latency.properties");
         FileInputStream fileInputStream = null;
         int idealPeer=-1;
         try {
+            int latency = 0;
             fileInputStream = new FileInputStream(file);
             Properties prop = new Properties();
             prop.load(fileInputStream);
@@ -274,14 +281,15 @@ public class ClientHelper {
                     System.out.println("Peer: " +peer);
                     System.out.println("Port: " +port);
                     System.out.println(prop.getProperty(port+"."+peer));
-                    int weight = loadFromAllPeers.get(peer)*Integer.parseInt(prop.getProperty(port+"."+peer));
+                    latency = Integer.parseInt(prop.getProperty(port+"."+peer));
+                    int weight = loadFromAllPeers.get(peer)*latency;
                     if(weight < min){
                         min = weight;
                         idealPeer=peer;
                     }
                 }
             }
-            return idealPeer;
+            return new Pair(idealPeer,latency);
         } catch (FileNotFoundException e) {
             System.out.println("Error: Couldn't locate the properties file");
         } catch (IOException e) {
