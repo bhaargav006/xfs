@@ -12,8 +12,6 @@ public class FilesSyncThread extends Thread {
             try {
                 SocketConnection trackingServer = new SocketConnection(8000);
                 List<String> listOfFiles = ClientHelper.getListOfFiles(port);
-//                listOfFiles.add("hello.txt:-2hj5353");
-//                listOfFiles.add("hello1.txt:-2hj5352");
                 ClientHelper.sendFileSystemContent(trackingServer.getOos(), port,listOfFiles);
                 trackingServer.close();
                 Thread.sleep(60000);

@@ -31,8 +31,6 @@ public class Client {
     }
 
     public static void main(String[] args) {
-//        Path relPath = Paths.get("8001");
-//        System.out.println(relPath.toAbsolutePath());
         new Client(Integer.parseInt(args[0]), new AtomicInteger(0));
         Scanner in = new Scanner(System.in);
         while(true) {

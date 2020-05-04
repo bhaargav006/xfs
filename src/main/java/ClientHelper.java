@@ -64,8 +64,7 @@ public class ClientHelper {
     }
 
     public static byte[] getFile(String fName, int port){
-
-        File myFile = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
+        File myFile = new File(Paths.get("").toAbsolutePath() + "/" + port + "/" + fName);
         try {
             FileInputStream fStream = new FileInputStream((myFile));
             byte[] fileContent = new byte[(int) myFile.length()];
@@ -91,9 +90,8 @@ public class ClientHelper {
 
     public static List<String> getListOfFiles(int port){
         List<String> listOfFiles = new ArrayList<>();
-//        Path relPath = Paths.get("8001");
-//        System.out.println(relPath);
-        File folder = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port);
+        Path relPath = Paths.get("");
+        File folder = new File(relPath.toAbsolutePath() + "/" + port);
         File[] fileNames = folder.listFiles();
 //        System.out.println("FileNames: " + fileNames);
         if(fileNames != null){
@@ -241,15 +239,14 @@ public class ClientHelper {
                     else {
 
                         byte[] fileContent = (byte[])idealSock.getOis().readObject();
-                        Path currentDir = Paths.get(".");
-                        System.out.println(currentDir);
-                        FileOutputStream fStream = new FileOutputStream("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName);
+                        Path currentDir = Paths.get("");
+                        FileOutputStream fStream = new FileOutputStream(currentDir.toAbsolutePath() + "/" + port + "/" + fName);
                         fStream.write(fileContent,0,Integer.parseInt(answer));
                         fStream.close();
                         flag = checkChecksum(checksum,fileContent);
                         System.out.println("Flag value: " + flag);
                         if(flag==0){
-                            Files.deleteIfExists(Paths.get("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port + "\\" + fName));
+                            Files.deleteIfExists(Paths.get(currentDir.toAbsolutePath() + "/" + port + "/" + fName));
                         }
                         else {
                             System.out.println("Download completed.");
@@ -293,7 +290,8 @@ public class ClientHelper {
     public static Pair<Integer,Integer> findIdealPeer(List<Integer> peerList, int port, HashMap<Integer, Integer> loadFromAllPeers) {
         //TODO : NULL checks to see if things are not breaking.
         int min=MAX_VALUE;
-        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\latency.properties");
+        Path currentDir = Paths.get("");
+        File file = new File(currentDir.toAbsolutePath() + "/latency.properties");
         FileInputStream fileInputStream = null;
         int idealPeer=-1;
         try {
@@ -352,8 +350,7 @@ public class ClientHelper {
      * @return: if the file is present or not.
      */
     public static boolean doesFileExist(String fName, int port) {
-        List<String> listOfFiles = new ArrayList<>();
-        File folder = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\" + port);
+        File folder = new File(Paths.get("").toAbsolutePath() + "/" + port);
         File[] fileNames = folder.listFiles();
         if(fileNames != null){
             for(File f : fileNames) {

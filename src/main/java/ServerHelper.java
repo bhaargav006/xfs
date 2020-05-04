@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -109,7 +110,8 @@ public class ServerHelper {
     }
 
     public static List<Integer> peerList()  {
-        File file = new File("C:\\Users\\Garima\\IdeaProjects\\xfs\\src\\main\\java\\peerList.properties");
+
+        File file = new File(Paths.get("").toAbsolutePath() + "/peerList.properties");
         FileInputStream fis = null;
         Properties properties = null;
         try {
