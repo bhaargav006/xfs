@@ -12,7 +12,6 @@ public class ServerToClientResponder extends Thread {
     public void run() {
         try{
             ObjectInputStream ois = client.getOis();
-            System.out.println("I am here!");
             String msg = (String) ois.readObject();
             ServerHelper.processMessage(client, msg);
         }
